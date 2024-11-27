@@ -117,8 +117,155 @@ Async task 3
 **Asynchronous Execution**:
 - Fetching data from a network without blocking the UI thread.
 
+### Serial and Concurrent Queues
 
-## Modern Concurrency
+In **Grand Central Dispatch (GCD)**, queues are used to execute tasks. There are two main types of queues:
+
+- Serial queues only have a single thread associated with them and thus only allow a single task to be executed at any given time.
+- Concurrent queue, on the other hand, is able to utilize as many threads as the system has resources for. Threads will be created and released as necessary on a concurrent queue.
+
+#### **Concurrent Queue**
+- Executes multiple tasks concurrently.
+- Tasks start in the order they are added, but they may complete in any order since they can run simultaneously on different threads.
+- Useful for performing multiple tasks in parallel.
+
+#### **Serial Queue**
+- Executes tasks one at a time in the order they are added.
+- Ensures that each task finishes before the next one starts.
+- Useful for ensuring sequential execution or avoiding race conditions when accessing shared resources.
+
+
+### **Key Differences:**
+
+| Feature         | Serial Queue                         | Concurrent Queue                   |
+|-----------------|-------------------------------------|------------------------------------|
+| Task Execution  | One task at a time                 | Multiple tasks simultaneously      |
+| Order           | Tasks execute in the order added   | Tasks start in the order added, but may finish in any order |
+| Use Case        | Sequential tasks, thread safety    | Parallel tasks, performance optimization |
+
+#### Example: Serial Queue
+
+```swift
+import Foundation
+
+func serialQueueExample() {
+    let serialQueue = DispatchQueue(label: "com.example.serialQueue")
+    
+    print("Start Serial Queue")
+    
+    serialQueue.async {
+        for i in 1...3 {
+            print("Task 1 - \(i)")
+            sleep(1) // Simulate a long task
+        }
+    }
+    
+    serialQueue.async {
+        for i in 1...3 {
+            print("Task 2 - \(i)")
+            sleep(1) // Simulate a long task
+        }
+    }
+    
+    serialQueue.async {
+        for i in 1...3 {
+            print("Task 3 - \(i)")
+            sleep(1) // Simulate a long task
+        }
+    }
+    
+    print("End Serial Queue")
+}
+
+serialQueueExample()
+```
+
+##### Output (sequential execution):
+```
+Start Serial Queue
+End Serial Queue
+Task 1 - 1
+Task 1 - 2
+Task 1 - 3
+Task 2 - 1
+Task 2 - 2
+Task 2 - 3
+Task 3 - 1
+Task 3 - 2
+Task 3 - 3
+```
+
+- Tasks are executed one at a time in the order they were added.
+
+#### Example: Concurrent Queue
+
+```swift
+import Foundation
+
+func concurrentQueueExample() {
+    let concurrentQueue = DispatchQueue(label: "com.example.concurrentQueue", attributes: .concurrent)
+    
+    print("Start Concurrent Queue")
+    
+    concurrentQueue.async {
+        for i in 1...3 {
+            print("Task 1 - \(i)")
+            sleep(1) // Simulate a long task
+        }
+    }
+    
+    concurrentQueue.async {
+        for i in 1...3 {
+            print("Task 2 - \(i)")
+            sleep(1) // Simulate a long task
+        }
+    }
+    
+    concurrentQueue.async {
+        for i in 1...3 {
+            print("Task 3 - \(i)")
+            sleep(1) // Simulate a long task
+        }
+    }
+    
+    print("End Concurrent Queue")
+}
+
+concurrentQueueExample()
+```
+
+#### Output (concurrent execution, order may vary):
+```
+Start Concurrent Queue
+End Concurrent Queue
+Task 1 - 1
+Task 2 - 1
+Task 3 - 1
+Task 1 - 2
+Task 2 - 2
+Task 3 - 2
+Task 1 - 3
+Task 2 - 3
+Task 3 - 3
+```
+
+- Tasks begin executing in the order they are added but may overlap because they are running concurrently.
+
+#### When to Use
+
+##### Serial Queue:
+- When tasks need to execute one at a time, such as updating shared resources.
+- For predictable task order and avoiding race conditions.
+
+##### Concurrent Queue:
+- When tasks are independent and can run in parallel to improve performance, such as downloading multiple files or performing batch processing.
+
+
+### Operations
+
+
+
+# Modern Concurrency
 
 ### async/await
 
