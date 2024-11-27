@@ -25,6 +25,147 @@ All of the tasks that GCD manages for you are placed into GCD-managed first-in, 
 
 ### Dispatch Queues
 
+Dispatch Queues are a core feature of GCD in Swift, used to manage the execution of tasks. They provide a way to execute code concurrently or serially on different threads, enabling efficient use of system resources.
+
+### **Types of Dispatch Queues**
+There are three main types of Dispatch Queues in Swift:
+
+1. **Main Dispatch Queue**:
+   - Runs tasks on the main thread.
+   - Used for UI updates and tasks that must interact with the main thread.
+   
+2. **Global Dispatch Queues**:
+   - System-provided concurrent queues with different quality-of-service (QoS) levels.
+   - Used for tasks like network requests, I/O operations, and background processing.
+   
+3. **Custom Dispatch Queues**:
+   - User-created queues that can be either serial or concurrent.
+   - Useful for organizing and controlling the execution of custom tasks.
+
+  | Type of Queue          | Characteristics                              | Example Use Cases                      |
+|------------------------|----------------------------------------------|----------------------------------------|
+| **Main Dispatch Queue** | Executes tasks on the main thread.            | UI updates, user interaction.          |
+| **Global Dispatch Queue** | Concurrent system-provided queues.           | Background processing, I/O operations. |
+| **Custom Serial Queue**  | Executes tasks one at a time in order.       | Data synchronization, sequential tasks.|
+| **Custom Concurrent Queue** | Executes tasks simultaneously.             | Parallel processing, batch operations. |
+
+#### **1. Main Dispatch Queue Example**
+The main queue executes tasks on the main thread, often used for UI updates.
+
+```swift
+import Foundation
+
+func updateUI() {
+    DispatchQueue.main.async {
+        print("Updating UI on the main thread")
+    }
+}
+
+updateUI()
+```
+
+- Tasks dispatched to the main queue run on the main thread.
+- Use `DispatchQueue.main.async` for non-blocking UI updates.
+
+### **2. Global Dispatch Queue Example**
+Global queues are concurrent and categorized by QoS levels (e.g., `.userInitiated`, `.background`).
+
+```swift
+import Foundation
+
+func performBackgroundTask() {
+    DispatchQueue.global(qos: .background).async {
+        print("Performing a background task")
+        sleep(2) // Simulate a long task
+        print("Background task completed")
+    }
+}
+
+performBackgroundTask()
+```
+- The task runs concurrently on a system-provided queue with a background QoS.
+- Use global queues for tasks like data processing or file downloads.
+
+#### **3. Custom Dispatch Queue Example**
+
+##### **Serial Custom Queue**
+A serial queue executes one task at a time, in the order they are added.
+
+```swift
+func serialQueueExample() {
+    let serialQueue = DispatchQueue(label: "com.example.serialQueue")
+    
+    serialQueue.async {
+        print("Task 1 - Start")
+        sleep(1)
+        print("Task 1 - End")
+    }
+    
+    serialQueue.async {
+        print("Task 2 - Start")
+        sleep(1)
+        print("Task 2 - End")
+    }
+    
+    serialQueue.async {
+        print("Task 3 - Start")
+        sleep(1)
+        print("Task 3 - End")
+    }
+}
+
+serialQueueExample()
+```
+
+#### Output:
+```
+Task 1 - Start
+Task 1 - End
+Task 2 - Start
+Task 2 - End
+Task 3 - Start
+Task 3 - End
+```
+
+##### **Concurrent Custom Queue**
+A concurrent queue executes multiple tasks at the same time.
+
+```swift
+func concurrentQueueExample() {
+    let concurrentQueue = DispatchQueue(label: "com.example.concurrentQueue", attributes: .concurrent)
+    
+    concurrentQueue.async {
+        print("Task 1 - Start")
+        sleep(1)
+        print("Task 1 - End")
+    }
+    
+    concurrentQueue.async {
+        print("Task 2 - Start")
+        sleep(1)
+        print("Task 2 - End")
+    }
+    
+    concurrentQueue.async {
+        print("Task 3 - Start")
+        sleep(1)
+        print("Task 3 - End")
+    }
+}
+
+concurrentQueueExample()
+```
+
+#### Output (order may vary):
+```
+Task 1 - Start
+Task 2 - Start
+Task 3 - Start
+Task 1 - End
+Task 2 - End
+Task 3 - End
+```
+
 ### Synchronous and Asynchronous Tasks
 
 **sync**
