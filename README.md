@@ -260,6 +260,151 @@ Task 3 - 3
 ##### Concurrent Queue:
 - When tasks are independent and can run in parallel to improve performance, such as downloading multiple files or performing batch processing.
 
+### Asynchronous Doesn’t Mean Concurrent
+
+While the difference seems subtle at first, **just because your tasks are asynchronous doesn’t mean they will run concurrently**. You’re actually able to submit asynchronous tasks to either a serial queue or a concurrent queue. Being synchronous or asynchronous simply identifies whether or not the queue on which you’re running the task must wait for the task to complete before it can spawn the next task.
+
+### **Example: Async Task on a Serial Queue**
+
+```swift
+import Foundation
+
+func asyncTaskOnSerialQueue() {
+    let serialQueue = DispatchQueue(label: "com.example.serialQueue")
+    
+    print("Start asyncTaskOnSerialQueue")
+    
+    serialQueue.async {
+        print("Async Task 1 - Start")
+        sleep(2) // Simulate a long-running task
+        print("Async Task 1 - End")
+    }
+    
+    serialQueue.async {
+        print("Async Task 2 - Start")
+        sleep(2) // Simulate a long-running task
+        print("Async Task 2 - End")
+    }
+    
+    serialQueue.async {
+        print("Async Task 3 - Start")
+        sleep(2) // Simulate a long-running task
+        print("Async Task 3 - End")
+    }
+    
+    print("End asyncTaskOnSerialQueue")
+}
+
+asyncTaskOnSerialQueue()
+```
+
+#### Output:
+```
+Start asyncTaskOnSerialQueue
+End asyncTaskOnSerialQueue
+Async Task 1 - Start
+Async Task 1 - End
+Async Task 2 - Start
+Async Task 2 - End
+Async Task 3 - Start
+Async Task 3 - End
+```
+
+**Explanation**:
+- Tasks are executed **one at a time** in the order they are added (serial queue behavior).
+- The **main thread** is not blocked; it moves on immediately after scheduling the tasks (`End asyncTaskOnSerialQueue` is printed before any task completes).
+
+
+### **Example: Sync Task on a Serial Queue**
+
+```swift
+import Foundation
+
+func syncTaskOnSerialQueue() {
+    let serialQueue = DispatchQueue(label: "com.example.serialQueue")
+    
+    print("Start syncTaskOnSerialQueue")
+    
+    serialQueue.sync {
+        print("Sync Task 1 - Start")
+        sleep(2) // Simulate a long-running task
+        print("Sync Task 1 - End")
+    }
+    
+    serialQueue.sync {
+        print("Sync Task 2 - Start")
+        sleep(2) // Simulate a long-running task
+        print("Sync Task 2 - End")
+    }
+    
+    serialQueue.sync {
+        print("Sync Task 3 - Start")
+        sleep(2) // Simulate a long-running task
+        print("Sync Task 3 - End")
+    }
+    
+    print("End syncTaskOnSerialQueue")
+}
+
+syncTaskOnSerialQueue()
+```
+
+#### Output:
+```
+Start syncTaskOnSerialQueue
+Sync Task 1 - Start
+Sync Task 1 - End
+Sync Task 2 - Start
+Sync Task 2 - End
+Sync Task 3 - Start
+Sync Task 3 - End
+End syncTaskOnSerialQueue
+```
+
+**Explanation**:
+- Each task is executed **one at a time** in the order they are added (serial queue behavior).
+- The **main thread is blocked** until each task completes sequentially. `End syncTaskOnSerialQueue` is only printed after all tasks are finished.
+
+#### Combining Both
+You can mix **async** and **sync** tasks on the same serial queue to achieve flexible behavior:
+
+```swift
+let serialQueue = DispatchQueue(label: "com.example.mixedQueue")
+
+serialQueue.async {
+    print("Async Task - Start")
+    sleep(1)
+    print("Async Task - End")
+}
+
+serialQueue.sync {
+    print("Sync Task - Start")
+    sleep(2)
+    print("Sync Task - End")
+}
+
+serialQueue.async {
+    print("Another Async Task - Start")
+    sleep(1)
+    print("Another Async Task - End")
+}
+```
+
+#### Expected Output:
+```
+Async Task - Start
+Async Task - End
+Sync Task - Start
+Sync Task - End
+Another Async Task - Start
+Another Async Task - End
+``` 
+
+This demonstrates how combining async and sync tasks can help balance responsiveness and sequential execution when working with serial queues in Swift.
+
+
+
+
 
 ### Operations
 
