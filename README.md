@@ -23,6 +23,8 @@ GCD is Apple’s implementation of C’s libdispatch library. Its purpose is to 
 
 All of the tasks that GCD manages for you are placed into GCD-managed first-in, **first-out** (FIFO) queues. Each task that you submit to a queue is then executed against a pool of threads fully managed by the system.
 
+### Dispatch Queues
+
 ### Synchronous and Asynchronous Tasks
 
 **sync**
