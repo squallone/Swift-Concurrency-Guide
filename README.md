@@ -1,5 +1,12 @@
-# Concurrency
-Notes about concurrency
+# Concurrency Study Guide
+
+These notes serves as my guide to studying concurrency, focusing on three key areas:  
+
+1. **Grand Central Dispatch (GCD)**  
+2. **Modern Concurrency**  
+3. **Multithreading Pitfalls**  
+
+The goal is to consolidate all relevant information gathered from various books and articles into one comprehensive resource. It is designed to facilitate in-depth understanding and act as a quick reference during learning and development.
 
 ## What is concurrency?
 
@@ -15,6 +22,100 @@ Concurrency refers to the ability to perform multiple tasks simultaneously, enab
 GCD is Apple’s implementation of C’s libdispatch library. Its purpose is to queue up tasks (either a method or a closure) that can be run in parallel, depending on availability of resources; it then executes the tasks on an available processor core.
 
 All of the tasks that GCD manages for you are placed into GCD-managed first-in, **first-out** (FIFO) queues. Each task that you submit to a queue is then executed against a pool of threads fully managed by the system.
+
+### Synchronous and Asynchronous Tasks
+
+**Synchronous (sync)**
+
+- The task is executed immediately on the current thread.
+- The current thread is blocked until the task completes.
+- Typically used when the operation is small or needs to be performed sequentially.
+
+**Asynchronous (async)**
+
+- The task is scheduled to run on a different thread or later on the current thread.
+- The current thread is **not blocked** and can continue executing other tasks.
+- Typically used for long-running or non-blocking operations like network requests or file I/O.
+
+##### Key Difference:
+- **Sync** blocks the current thread.
+- **Async** does not block the current thread.
+
+
+#### Example: Sync vs. Async with DispatchQueue
+
+```swift
+import Foundation
+
+// Simulate synchronous and asynchronous execution
+func syncExample() {
+    let queue = DispatchQueue.global()
+    print("Before sync task")
+    
+    queue.sync { // Task runs synchronously on the global queue
+        for i in 1...3 {
+            print("Sync task \(i)")
+        }
+    }
+    
+    print("After sync task")
+}
+
+func asyncExample() {
+    let queue = DispatchQueue.global()
+    print("Before async task")
+    
+    queue.async { // Task runs asynchronously on the global queue
+        for i in 1...3 {
+            print("Async task \(i)")
+        }
+    }
+    
+    print("After async task")
+}
+
+// Call both examples
+print("--- Synchronous Example ---")
+syncExample()
+
+print("\n--- Asynchronous Example ---")
+asyncExample()
+
+// Give some time for async task to complete (only needed in playgrounds)
+Thread.sleep(forTimeInterval: 1)
+```
+
+##### Synchronous Example:
+```
+--- Synchronous Example ---
+Before sync task
+Sync task 1
+Sync task 2
+Sync task 3
+After sync task
+```
+
+- The `sync` block ensures that the task completes before moving to the next line (`After sync task`).
+
+##### Asynchronous Example:
+```
+--- Asynchronous Example ---
+Before async task
+After async task
+Async task 1
+Async task 2
+Async task 3
+```
+
+- The `async` block schedules the task to run on a background thread, allowing the main thread to continue execution immediately (`After async task` is printed before the async task completes).
+
+
+#### Practical Use Case
+**Synchronous Execution**:
+- Performing a sequence of dependent operations (e.g., reading a file before parsing it).
+
+**Asynchronous Execution**:
+- Fetching data from a network without blocking the UI thread.
 
 
 ## Modern Concurrency
