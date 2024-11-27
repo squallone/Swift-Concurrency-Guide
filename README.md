@@ -25,13 +25,13 @@ All of the tasks that GCD manages for you are placed into GCD-managed first-in, 
 
 ### Synchronous and Asynchronous Tasks
 
-**Synchronous (sync)**
+**sync**
 
 - The task is executed immediately on the current thread.
 - The current thread is blocked until the task completes.
 - Typically used when the operation is small or needs to be performed sequentially.
 
-**Asynchronous (async)**
+**async**
 
 - The task is scheduled to run on a different thread or later on the current thread.
 - The current thread is **not blocked** and can continue executing other tasks.
@@ -40,7 +40,6 @@ All of the tasks that GCD manages for you are placed into GCD-managed first-in, 
 ##### Key Difference:
 - **Sync** blocks the current thread.
 - **Async** does not block the current thread.
-
 
 #### Example: Sync vs. Async with DispatchQueue
 
@@ -109,13 +108,9 @@ Async task 3
 
 - The `async` block schedules the task to run on a background thread, allowing the main thread to continue execution immediately (`After async task` is printed before the async task completes).
 
-
 #### Practical Use Case
-**Synchronous Execution**:
-- Performing a sequence of dependent operations (e.g., reading a file before parsing it).
-
-**Asynchronous Execution**:
-- Fetching data from a network without blocking the UI thread.
+- sync: Performing a sequence of dependent operations (e.g., reading a file before parsing it).
+- async: Fetching data from a network without blocking the UI thread.
 
 ### Serial and Concurrent Queues
 
@@ -133,9 +128,6 @@ In **Grand Central Dispatch (GCD)**, queues are used to execute tasks. There are
 - Executes tasks one at a time in the order they are added.
 - Ensures that each task finishes before the next one starts.
 - Useful for ensuring sequential execution or avoiding race conditions when accessing shared resources.
-
-
-### **Key Differences:**
 
 | Feature         | Serial Queue                         | Concurrent Queue                   |
 |-----------------|-------------------------------------|------------------------------------|
@@ -314,7 +306,6 @@ Async Task 3 - End
 - Tasks are executed **one at a time** in the order they are added (serial queue behavior).
 - The **main thread** is not blocked; it moves on immediately after scheduling the tasks (`End asyncTaskOnSerialQueue` is printed before any task completes).
 
-
 ### **Example: Sync Task on a Serial Queue**
 
 ```swift
@@ -348,7 +339,6 @@ func syncTaskOnSerialQueue() {
 
 syncTaskOnSerialQueue()
 ```
-
 #### Output:
 ```
 Start syncTaskOnSerialQueue
@@ -402,12 +392,165 @@ Another Async Task - End
 
 This demonstrates how combining async and sync tasks can help balance responsiveness and sequential execution when working with serial queues in Swift.
 
-
-
-
-
 ### Operations
+Operations are a higher-level abstraction over dispatch queues. They are part of the Operation and OperationQueue classes, which provide more control and flexibility for managing tasks compared to GCD’s raw dispatch queues.
 
+- Tasks are encapsulated as Operation objects, making them reusable and easier to manage.
+- Operations can have dependencies, meaning one operation can wait for another to complete before starting.
+- You can set priorities for operations to control their execution order.
+- Operations can be canceled gracefully using the cancel() method.
+- Operations can be executed concurrently or serially within an OperationQueue.
+
+Operations can exist in any of the following states:
+
+- `isReady`
+- `isExecuting`
+- `isCancelled`
+- `isFinished`
+
+### Creating and Using Operations
+
+#### BlockOperation
+
+The `BlockOperation` class allows you to execute blocks of code as operations. `BlockOperation` subclasses Operation for you and manages the concurrent execution of one or more closures on the default global queue. However, being an actual `Operation` subclass lets you take advantage of all the other features of an operation.
+
+```swift
+import Foundation
+
+func blockOperationExample() {
+    let operationQueue = OperationQueue() // Create an operation queue
+    
+    // Create a BlockOperation
+    let operation = BlockOperation {
+        print("Task 1 - Start")
+        sleep(2) // Simulate a long-running task
+        print("Task 1 - End")
+    }
+    
+    // Add another block to the same operation
+    operation.addExecutionBlock {
+        print("Task 2 - Start")
+        sleep(1) // Simulate another task
+        print("Task 2 - End")
+    }
+    
+    // Add operation to the queue
+    operationQueue.addOperation(operation)
+    
+    print("All tasks added to the queue")
+}
+
+blockOperationExample()
+```
+
+#### Output:
+```
+All tasks added to the queue
+Task 1 - Start
+Task 2 - Start
+Task 2 - End
+Task 1 - End
+```
+
+- Tasks in the same `BlockOperation` run concurrently on different threads.
+
+##### 2. **Using Custom `Operation`**
+You can subclass `Operation` to create a custom task with more control.
+
+```swift
+import Foundation
+
+class CustomOperation: Operation {
+    override func main() {
+        if isCancelled { return } // Check for cancellation
+        print("Custom Operation - Start")
+        sleep(2) // Simulate a task
+        if isCancelled { return }
+        print("Custom Operation - End")
+    }
+}
+
+func customOperationExample() {
+    let operationQueue = OperationQueue()
+    
+    // Create a custom operation
+    let customOperation = CustomOperation()
+    
+    // Add operation to the queue
+    operationQueue.addOperation(customOperation)
+    
+    print("Custom operation added to the queue")
+}
+
+customOperationExample()
+```
+
+##### Output:
+```
+Custom operation added to the queue
+Custom Operation - Start
+Custom Operation - End
+```
+
+##### 3. **Adding Dependencies**
+Operations can depend on other operations. This ensures that one operation waits for another to finish before starting.
+
+```swift
+import Foundation
+
+func dependencyExample() {
+    let operationQueue = OperationQueue()
+    
+    let operation1 = BlockOperation {
+        print("Operation 1 - Start")
+        sleep(1)
+        print("Operation 1 - End")
+    }
+    
+    let operation2 = BlockOperation {
+        print("Operation 2 - Start")
+        sleep(1)
+        print("Operation 2 - End")
+    }
+    
+    let operation3 = BlockOperation {
+        print("Operation 3 - Start")
+        sleep(1)
+        print("Operation 3 - End")
+    }
+    
+    // Set dependencies
+    operation2.addDependency(operation1) // Operation 2 waits for Operation 1
+    operation3.addDependency(operation2) // Operation 3 waits for Operation 2
+    
+    // Add operations to the queue
+    operationQueue.addOperations([operation1, operation2, operation3], waitUntilFinished: false)
+    
+    print("All operations added to the queue")
+}
+
+dependencyExample()
+```
+
+##### Output:
+```
+All operations added to the queue
+Operation 1 - Start
+Operation 1 - End
+Operation 2 - Start
+Operation 2 - End
+Operation 3 - Start
+Operation 3 - End
+```
+
+- `Operation 2` waits for `Operation 1` to complete, and `Operation 3` waits for `Operation 2`.
+
+### **When to Use Operations**
+
+- Use operations when tasks require dependencies or monitoring.
+- Encapsulate reusable tasks in custom `Operation` subclasses.
+- Operations are ideal when you need to cancel tasks or track their progress and state.
+- For finer control over execution threads and priorities.
 
 
 # Modern Concurrency
