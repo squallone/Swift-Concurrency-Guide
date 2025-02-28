@@ -1,5 +1,61 @@
 # Concurrency Study Guide
 
+## 1. Introduction
+- [Purpose of the Study Guide](#purpose-of-the-study-guide)
+- [Overview of Concurrency](#overview-of-concurrency)
+
+## 2. What is Concurrency?
+- [Definition of Concurrency](#definition-of-concurrency)
+- [Parallelism vs. Concurrency](#parallelism-vs-concurrency)
+
+## 3. Grand Central Dispatch (GCD)
+- [Overview of GCD](#overview-of-gcd)
+- [Dispatch Queues](#dispatch-queues)
+  - [Types of Dispatch Queues](#types-of-dispatch-queues)
+  - [Main Dispatch Queue Example](#main-dispatch-queue-example)
+  - [Global Dispatch Queue Example](#global-dispatch-queue-example)
+  - [Custom Dispatch Queue Example](#custom-dispatch-queue-example)
+    - [Serial Custom Queue](#serial-custom-queue)
+    - [Concurrent Custom Queue](#concurrent-custom-queue)
+- [Synchronous vs. Asynchronous Tasks](#synchronous-vs-asynchronous-tasks)
+  - [sync vs. async Key Differences](#sync-vs-async-key-differences)
+  - [Example: Sync vs. Async](#example-sync-vs-async)
+- [Serial and Concurrent Queues](#serial-and-concurrent-queues)
+  - [Serial Queue](#serial-queue)
+  - [Concurrent Queue](#concurrent-queue)
+  - [Example: Serial Queue](#example-serial-queue)
+  - [Example: Concurrent Queue](#example-concurrent-queue)
+- [Asynchronous Doesn’t Mean Concurrent](#asynchronous-doesnt-mean-concurrent)
+  - [Example: Async Task on a Serial Queue](#example-async-task-on-a-serial-queue)
+  - [Example: Sync Task on a Serial Queue](#example-sync-task-on-a-serial-queue)
+  - [Combining Async and Sync](#combining-async-and-sync)
+
+## 4. Operations
+- [Overview of Operations](#overview-of-operations)
+  - [BlockOperation](#blockoperation)
+  - [Custom Operation](#custom-operation)
+  - [Adding Dependencies](#adding-dependencies)
+- [When to Use Operations](#when-to-use-operations)
+
+## 5. Modern Concurrency
+- [Overview of Modern Concurrency](#overview-of-modern-concurrency)
+- [async/await](#async-await)
+
+## 6. Multithreading Pitfalls
+- [Overview of Multithreading Pitfalls](#overview-of-multithreading-pitfalls)
+- [Deadlocks](#deadlocks)
+  - [Solving the Deadlocking Problem](#solving-the-deadlocking-problem)
+  - [Mutex](#mutex)
+    - [How a Mutex Works](#how-a-mutex-works)
+    - [Example Using NSLock](#example-using-nslock)
+    - [Without Using a Lock](#visualizing-the-problem-without-a-lock)
+  - [Semaphores](#semaphores)
+    - [How Semaphores Work](#how-semaphores-work)
+    - [Example Using DispatchSemaphore](#example-using-dispatchsemaphore)
+
+---
+
+This index provides a structured overview of the contents, making it easier to navigate through the study guide. If you need any changes or additional sections, let me know!
 These notes serves as my guide to studying concurrency, focusing on three key areas:  
 
 1. **Grand Central Dispatch (GCD)**  
