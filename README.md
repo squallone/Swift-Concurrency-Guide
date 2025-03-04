@@ -1,69 +1,56 @@
-# Concurrency Study Guide
+Concurrency Study Guide
 
-## 1. Introduction
-- [Purpose of the Study Guide](#purpose-of-the-study-guide)
-- [Overview of Concurrency](#overview-of-concurrency)
+## 1. [Introduction](#introduction)
 
-## 2. What is Concurrency?
-- [Definition of Concurrency](#definition-of-concurrency)
+## 2. [What is Concurrency?](#what-is-concurrency)
 - [Parallelism vs. Concurrency](#parallelism-vs-concurrency)
 
-## 3. Grand Central Dispatch (GCD)
-- [Overview of GCD](#overview-of-gcd)
+## 3. [Grand Central Dispatch (GCD)](#grand-central-dispatch)
+- [Overview of GCD](#grand-central-dispatch)
 - [Dispatch Queues](#dispatch-queues)
   - [Types of Dispatch Queues](#types-of-dispatch-queues)
-  - [Main Dispatch Queue Example](#main-dispatch-queue-example)
-  - [Global Dispatch Queue Example](#global-dispatch-queue-example)
-  - [Custom Dispatch Queue Example](#custom-dispatch-queue-example)
-    - [Serial Custom Queue](#serial-custom-queue)
-    - [Concurrent Custom Queue](#concurrent-custom-queue)
-- [Synchronous vs. Asynchronous Tasks](#synchronous-vs-asynchronous-tasks)
-  - [sync vs. async Key Differences](#sync-vs-async-key-differences)
-  - [Example: Sync vs. Async](#example-sync-vs-async)
+  - [Main Dispatch Queue](#main-dispatch-queue)
+  - [Global Dispatch Queue](#global-dispatch-queue)
+  - [Custom Dispatch Queues](#custom-dispatch-queues)
+- [Synchronous and Asynchronous Tasks](#synchronous-and-asynchronous-tasks)
+  - [Sync](#sync)
+  - [Async](#async)
+  - [Sync vs Async](#sync-vs-async-with-dispatchqueue)
 - [Serial and Concurrent Queues](#serial-and-concurrent-queues)
   - [Serial Queue](#serial-queue)
   - [Concurrent Queue](#concurrent-queue)
-  - [Example: Serial Queue](#example-serial-queue)
-  - [Example: Concurrent Queue](#example-concurrent-queue)
 - [Asynchronous Doesn’t Mean Concurrent](#asynchronous-doesnt-mean-concurrent)
   - [Example: Async Task on a Serial Queue](#example-async-task-on-a-serial-queue)
   - [Example: Sync Task on a Serial Queue](#example-sync-task-on-a-serial-queue)
-  - [Combining Async and Sync](#combining-async-and-sync)
+  - [Combining Both](#combining-both)
 
-## 4. Operations
-- [Overview of Operations](#overview-of-operations)
+## 4. [Operations](#operations)
+- [Overview of Operations](#operations)
   - [BlockOperation](#blockoperation)
   - [Custom Operation](#custom-operation)
   - [Adding Dependencies](#adding-dependencies)
 - [When to Use Operations](#when-to-use-operations)
 
-## 5. Modern Concurrency
-- [Overview of Modern Concurrency](#overview-of-modern-concurrency)
-- [async/await](#async-await)
+## 5. [Modern Concurrency](#modern-concurrency)
+- [async/await](#asyncawait)
 
-## 6. Multithreading Pitfalls
-- [Overview of Multithreading Pitfalls](#overview-of-multithreading-pitfalls)
+## 6. [Multithreading Pitfalls](#multithreading-pitfalls)
 - [Deadlocks](#deadlocks)
   - [Solving the Deadlocking Problem](#solving-the-deadlocking-problem)
-  - [Mutex](#mutex)
-    - [How a Mutex Works](#how-a-mutex-works)
-    - [Example Using NSLock](#example-using-nslock)
-    - [Without Using a Lock](#visualizing-the-problem-without-a-lock)
-  - [Semaphores](#semaphores)
-    - [How Semaphores Work](#how-semaphores-work)
-    - [Example Using DispatchSemaphore](#example-using-dispatchsemaphore)
+- [Mutex](#mutex)
+  - [How a Mutex Works](#how-a-mutex-works)
+  - [Example Using NSLock](#example-using-nslock)
+  - [Visualizing the Problem Without a Lock](#visualizing-the-problem-without-a-lock)
+- [Semaphores](#semaphores)
+  - [How Semaphores Work](#how-semaphores-work)
+  - [Example Using DispatchSemaphore](#example-using-dispatchsemaphore)
 
 ---
-
-This index provides a structured overview of the contents, making it easier to navigate through the study guide. If you need any changes or additional sections, let me know!
-These notes serves as my guide to studying concurrency, focusing on three key areas:  
-
-1. **Grand Central Dispatch (GCD)**  
-2. **Modern Concurrency**  
-3. **Multithreading Pitfalls**  
+## Introduction
 
 The goal is to consolidate all relevant information gathered from various books and articles into one comprehensive resource. It is designed to facilitate in-depth understanding and act as a quick reference during learning and development.
 
+---
 ## What is concurrency?
 
 Concurrency refers to the ability to perform multiple tasks simultaneously, enabling our app to remain responsive and efficient. It allows you to execute different parts of your code independently, making the most of the device's hardware resources, such as its multiple cores. Concurrency is essential for tasks that could block the main thread, such as network requests, file operations, or heavy computations.
@@ -72,7 +59,7 @@ Concurrency refers to the ability to perform multiple tasks simultaneously, enab
 
 - Concurrency: Structuring a program to handle multiple tasks, which may or may not run at the same time.
 - Parallelism: Executing multiple tasks literally at the same time, which depends on the system's hardware capabilities.
-
+---
 ## Grand Central Dispatch
 
 GCD is Apple’s implementation of C’s libdispatch library. Its purpose is to queue up tasks (either a method or a closure) that can be run in parallel, depending on availability of resources; it then executes the tasks on an available processor core.
@@ -83,30 +70,19 @@ All of the tasks that GCD manages for you are placed into GCD-managed first-in, 
 
 Dispatch Queues are a core feature of GCD in Swift, used to manage the execution of tasks. They provide a way to execute code concurrently or serially on different threads, enabling efficient use of system resources.
 
-### **Types of Dispatch Queues**
+#### **Types of Dispatch Queues**
 There are three main types of Dispatch Queues in Swift:
-
-1. **Main Dispatch Queue**:
-   - Runs tasks on the main thread.
-   - Used for UI updates and tasks that must interact with the main thread.
-   
-2. **Global Dispatch Queues**:
-   - System-provided concurrent queues with different quality-of-service (QoS) levels.
-   - Used for tasks like network requests, I/O operations, and background processing.
-   
-3. **Custom Dispatch Queues**:
-   - User-created queues that can be either serial or concurrent.
-   - Useful for organizing and controlling the execution of custom tasks.
 
   | Type of Queue          | Characteristics                              | Example Use Cases                      |
 |------------------------|----------------------------------------------|----------------------------------------|
-| **Main Dispatch Queue** | Executes tasks on the main thread.            | UI updates, user interaction.          |
-| **Global Dispatch Queue** | Concurrent system-provided queues.           | Background processing, I/O operations. |
-| **Custom Serial Queue**  | Executes tasks one at a time in order.       | Data synchronization, sequential tasks.|
-| **Custom Concurrent Queue** | Executes tasks simultaneously.             | Parallel processing, batch operations. |
+| **Main** | Executes tasks on the main thread.            | UI updates, user interaction.          |
+| **Global** | Concurrent system-provided queues.           | Background processing, I/O operations. |
+| **Custom Serial**  | Executes tasks one at a time in order.       | Data synchronization, sequential tasks.|
+| **Custom Concurrent** | Executes tasks simultaneously.             | Parallel processing, batch operations. |
 
-#### **1. Main Dispatch Queue Example**
-The main queue executes tasks on the main thread, often used for UI updates.
+#### Main Dispatch Queue
+  - Runs tasks on the main thread.
+  - Used for UI updates and tasks that must interact with the main thread.
 
 ```swift
 import Foundation
@@ -123,8 +99,9 @@ updateUI()
 - Tasks dispatched to the main queue run on the main thread.
 - Use `DispatchQueue.main.async` for non-blocking UI updates.
 
-### **2. Global Dispatch Queue Example**
-Global queues are concurrent and categorized by QoS levels (e.g., `.userInitiated`, `.background`).
+#### Global Dispatch Queue
+  - System-provided concurrent queues with different quality-of-service (QoS) levels.
+   - Used for tasks like network requests, I/O operations, and background processing.
 
 ```swift
 import Foundation
@@ -139,12 +116,14 @@ func performBackgroundTask() {
 
 performBackgroundTask()
 ```
-- The task runs concurrently on a system-provided queue with a background QoS.
-- Use global queues for tasks like data processing or file downloads.
+- The task runs concurrently on a system-provided queue with a background QoS
+- Use global queues for tasks like data processing or file downloads
 
-#### **3. Custom Dispatch Queue Example**
+#### Custom Dispatch Queues
+   - User-created queues that can be either serial or concurrent
+   - Useful for organizing and controlling the execution of custom tasks
 
-##### **Serial Custom Queue**
+##### Serial
 A serial queue executes one task at a time, in the order they are added.
 
 ```swift
@@ -172,8 +151,8 @@ func serialQueueExample() {
 
 serialQueueExample()
 ```
+Output:
 
-#### Output:
 ```
 Task 1 - Start
 Task 1 - End
@@ -183,7 +162,7 @@ Task 3 - Start
 Task 3 - End
 ```
 
-##### **Concurrent Custom Queue**
+##### Concurrent
 A concurrent queue executes multiple tasks at the same time.
 
 ```swift
@@ -211,8 +190,7 @@ func concurrentQueueExample() {
 
 concurrentQueueExample()
 ```
-
-#### Output (order may vary):
+Output (order may vary):
 ```
 Task 1 - Start
 Task 2 - Start
@@ -224,23 +202,20 @@ Task 3 - End
 
 ### Synchronous and Asynchronous Tasks
 
-**sync**
+#### Sync
 
+- Blocks the current thread.
 - The task is executed immediately on the current thread.
-- The current thread is blocked until the task completes.
-- Typically used when the operation is small or needs to be performed sequentially.
+- Typically used to perform a sequence of dependent operations (e.g., reading a file before parsing it)
 
-**async**
-
+#### Async
+- Does not block the current thread
 - The task is scheduled to run on a different thread or later on the current thread.
-- The current thread is **not blocked** and can continue executing other tasks.
 - Typically used for long-running or non-blocking operations like network requests or file I/O.
 
-##### Key Difference:
-- **Sync** blocks the current thread.
-- **Async** does not block the current thread.
 
-#### Example: Sync vs. Async with DispatchQueue
+#### Sync vs Async with DispatchQueue
+
 
 ```swift
 import Foundation
@@ -283,7 +258,7 @@ asyncExample()
 Thread.sleep(forTimeInterval: 1)
 ```
 
-##### Synchronous Example:
+**Synchronous Example**
 ```
 --- Synchronous Example ---
 Before sync task
@@ -295,7 +270,7 @@ After sync task
 
 - The `sync` block ensures that the task completes before moving to the next line (`After sync task`).
 
-##### Asynchronous Example:
+**Asynchronous Example**
 ```
 --- Asynchronous Example ---
 Before async task
@@ -307,26 +282,23 @@ Async task 3
 
 - The `async` block schedules the task to run on a background thread, allowing the main thread to continue execution immediately (`After async task` is printed before the async task completes).
 
-#### Practical Use Case
-- sync: Performing a sequence of dependent operations (e.g., reading a file before parsing it).
-- async: Fetching data from a network without blocking the UI thread.
+---
 
 ### Serial and Concurrent Queues
 
 In **Grand Central Dispatch (GCD)**, queues are used to execute tasks. There are two main types of queues:
 
-- Serial queues only have a single thread associated with them and thus only allow a single task to be executed at any given time.
-- Concurrent queue, on the other hand, is able to utilize as many threads as the system has resources for. Threads will be created and released as necessary on a concurrent queue.
+#### **Serial Queue**
+- Only have a single thread associated with them
+- Executes tasks one at a time in the order they are added
+- Ensures that each task finishes before the next one starts
+- Useful for ensuring sequential execution or avoiding race conditions when accessing shared resources
 
 #### **Concurrent Queue**
-- Executes multiple tasks concurrently.
-- Tasks start in the order they are added, but they may complete in any order since they can run simultaneously on different threads.
-- Useful for performing multiple tasks in parallel.
-
-#### **Serial Queue**
-- Executes tasks one at a time in the order they are added.
-- Ensures that each task finishes before the next one starts.
-- Useful for ensuring sequential execution or avoiding race conditions when accessing shared resources.
+- Utilize as many threads as the system has resources for
+- Executes multiple tasks concurrently
+- Tasks start in the order they are added, but they may complete in any order since they can run simultaneously on different threads
+- Useful for performing multiple tasks in parallel
 
 | Feature         | Serial Queue                         | Concurrent Queue                   |
 |-----------------|-------------------------------------|------------------------------------|
@@ -440,20 +412,20 @@ Task 2 - 3
 Task 3 - 3
 ```
 
-- Tasks begin executing in the order they are added but may overlap because they are running concurrently.
+- Tasks begin executing in the order they are added but may overlap because they are running concurrently
 
 #### When to Use
 
 ##### Serial Queue:
-- When tasks need to execute one at a time, such as updating shared resources.
-- For predictable task order and avoiding race conditions.
+- When tasks need to execute one at a time, such as updating shared resources
+- For predictable task order and avoiding race conditions
 
 ##### Concurrent Queue:
-- When tasks are independent and can run in parallel to improve performance, such as downloading multiple files or performing batch processing.
+- When tasks are independent and can run in parallel to improve performance, such as downloading multiple files or performing batch processing
 
 ### Asynchronous Doesn’t Mean Concurrent
 
-While the difference seems subtle at first, **just because your tasks are asynchronous doesn’t mean they will run concurrently**. You’re actually able to submit asynchronous tasks to either a serial queue or a concurrent queue. Being synchronous or asynchronous simply identifies whether or not the queue on which you’re running the task must wait for the task to complete before it can spawn the next task.
+While the difference seems subtle at first, **just because your tasks are asynchronous doesn’t mean they will run concurrently**. You’re actually able to submit asynchronous tasks to either a serial queue or a concurrent queue. Being synchronous or asynchronous simply identifies whether or not the queue on which you’re running the task must wait for the task to complete before it can spawn the next task
 
 ### **Example: Async Task on a Serial Queue**
 
@@ -502,8 +474,8 @@ Async Task 3 - End
 ```
 
 **Explanation**:
-- Tasks are executed **one at a time** in the order they are added (serial queue behavior).
-- The **main thread** is not blocked; it moves on immediately after scheduling the tasks (`End asyncTaskOnSerialQueue` is printed before any task completes).
+- Tasks are executed **one at a time** in the order they are added (serial queue behavior)
+- The **main thread** is not blocked; it moves on immediately after scheduling the tasks (`End asyncTaskOnSerialQueue` is printed before any task completes)
 
 ### **Example: Sync Task on a Serial Queue**
 
@@ -590,6 +562,8 @@ Another Async Task - End
 ``` 
 
 This demonstrates how combining async and sync tasks can help balance responsiveness and sequential execution when working with serial queues in Swift.
+
+---
 
 ### Operations
 Operations are a higher-level abstraction over dispatch queues. They are part of the Operation and OperationQueue classes, which provide more control and flexibility for managing tasks compared to GCD’s raw dispatch queues.
